@@ -250,6 +250,7 @@ class MainActivity : AppCompatActivity(), OnResultEventListener {
 You can also use `setCustomTheme` to force the usage of the light or dark theme.
 
 ```kotlin
+  //...
 walleePayment.setCustomTheme(null, ThemeEnum.DARK)
 ```
 
@@ -352,3 +353,5 @@ walleePayment.setCustomTheme(null, ThemeEnum.DARK)
   }
 }
 ```
+
+💀
