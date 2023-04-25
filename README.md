@@ -353,5 +353,3 @@ walleePayment.setCustomTheme(null, ThemeEnum.DARK)
   }
 }
 ```
-
-💀
