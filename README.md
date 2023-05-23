@@ -26,13 +26,13 @@
 
 | API | Type | Description |
 | --- | :-: | --- |
+| `WalleePaymentSdk.init(listener: OnResultEventListener)` | constructor | Initialization of SDK. Both Parameters are required! |
 | `OnResultEventListener` | interface | Interface for handling post-payment events `paymentResult` |
 | `fun paymentResult(paymentResult: PaymentResult)` | function | Result handler for transaction state |
-| `WalleePaymentSdk(eventListener: OnResultEventListener, context: Context)` | constructor | Initialization of SDK. Both Parameters are required! |
-| `walleePayment.launch(token: String)` | function | Opening payment dialog (activity) |
-| `walleePayment.setDarkTheme(theme: JSONObject)` | function | Can override the whole dark theme or just some specific color. All colors are in json format |
-| `walleePayment.setLightTheme(theme: JSONObject)` | function | Can override the whole light theme or just some specific color. All colors are in json format |
-| `walleePayment.setCustomTheme(theme: JSONObject?, baseTheme: ThemeEnum)` | function | Force to use only this theme (independent on user's setup). Can override default light/dark theme and force to use it or completely replace all or specific colors |
+| `WalleePaymentSdk.instance?.launch(token: String)` | function | Opening payment dialog (activity) |
+| `WalleePaymentSdk.instance?.setDarkTheme(theme: JSONObject)` | function | Can override the whole dark theme or just some specific color. All colors are in json format |
+| `WalleePaymentSdk.instance?.setLightTheme(theme: JSONObject)` | function | Can override the whole light theme or just some specific color. All colors are in json format |
+| `WalleePaymentSdk.instance?.setCustomTheme(theme: JSONObject?, baseTheme: ThemeEnum)` | function | Force to use only this theme (independent on user's setup). Can override default light/dark theme and force to use it or completely replace all or specific colors |
 
 ## Installation
 
@@ -47,7 +47,7 @@ Add `wallee-payment-sdk` to your `app/build.gradle` dependencies.
 ```groovy
 dependencies {
     // ...
-    implementation("com.wallee:wallee-payment-sdk:1.0.0")
+    implementation("com.wallee:wallee-payment-sdk:1.0.3")
     // ...
 }
 ```
@@ -81,35 +81,29 @@ curl 'https://app-wallee.com/api/transaction/createTransactionCredentials?spaceI
 
 Before launching the Android Payment SDK to collect the payment, your checkout page should show the total amount, the products that are being purchased and a checkout button to start the payment process.
 
-Let your checkout activity extend `OnResultEventListener`, add the necessary function `paymentResult`.
-
-```kotlin
-import com.wallee.walleepaymentsdk.event.PaymentResult
-import com.wallee.walleepaymentsdk.event.OnResultEventListener
-
-class MainActivity : AppCompatActivity(), OnResultEventListener {
-    override fun paymentResult(paymentResult: PaymentResult) {
-        // Handle transaction result
-    }
-}
-```
-
-Initialize the `WalleePaymentSdk` instance inside `onCreate` of your checkout activity.
+Is recommended to initialize `WalleePaymentSdk` in `Application` class. You can always access `WalleePaymentSdk` instance and `paymentResult` from everywhere in your app.
 
 ```kotlin
 // ...
+import android.app.Application
 import com.wallee.walleepaymentsdk.WalleePaymentSdk
+import com.wallee.walleepaymentsdk.event.OnResultEventListener
+import com.wallee.walleepaymentsdk.event.PaymentResult
 
-class MainActivity : AppCompatActivity(), OnResultEventListener {
-    lateinit var walleePayment: WalleePaymentSdk
+class MyApp : Application() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        walleePayment = WalleePaymentSdk(this, this)
+    private val _mainState = MutableLiveData<PaymentResult>()
+    val mainState: LiveData<PaymentResult> get() = _mainState
+
+    override fun onCreate() {
+        super.onCreate()
+        WalleePaymentSdk.init(listener = object : OnResultEventListener{
+            override fun paymentResult(paymentResult: PaymentResult) {
+                _mainState.postValue(paymentResult)
+            }
+        })
     }
-
-    // ...
+    //...
 }
 ```
 
@@ -118,19 +112,24 @@ When the customer taps the checkout button, call your endpoint that creates the 
 ```kotlin
 // ...
 
-class MainActivity : AppCompatActivity(), OnResultEventListener {
-    lateinit var walleePayment: WalleePaymentSdk
+class MainActivity : AppCompatActivity() {
     lateinit var btnCheckout: Button
+
+    var token = "" // to get token you have to create transaction. Checkout previous section #Create transaction
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        walleePayment = WalleePaymentSdk(this,this)
 
         btnCheckout.setOnClickListener {
-            // Call endpoint and get access token
-            walleePayment.launch("ACCESS_TOKEN")
+            WalleePaymentSdk.instance?.launch(token, this) ?: run {
+                Log.e(
+                    "Mobile SDK",
+                    "SDK is not initialized. Did you forget to run init on Application?"
+                )
+            }
         }
+
     }
 
     // ...
@@ -154,22 +153,36 @@ The response object contains these properties:
 - `message` providing a localized error message that can be shown to the customer.
 
 ```kotlin
-// ...
-import com.wallee.walleepaymentsdk.event.PaymentResult
 
-class MainActivity : AppCompatActivity(), OnResultEventListener {
+class MainActivity : AppCompatActivity() {
     // ...
+    lateinit var txtResultMessage: TextView
 
-    override fun paymentResult(paymentResult: PaymentResult) {
-        when (response.code) {
-            ResponseSuccessEnum.COMPLETED -> print("... do something")
-            ResponseSuccessEnum.FAILED -> print("... do something")
-            ResponseSuccessEnum.CANCELED -> print("... do something")
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+      //...
+      txtResultMessage = findViewById(R.id.txtResultMessage)
+
+      initWallee()
+    }
+
+    private fun initWallee() {
+        (application as? MyApp)?.mainState?.observe(this) { paymentResult ->
+
+            txtResultMessage.text = paymentResult.code.toString()
+            val colorCodeMap = mapOf(
+                PaymentResultEnum.FAILED to Color.RED,
+                PaymentResultEnum.COMPLETED to Color.GREEN,
+                PaymentResultEnum.CANCELED to Color.parseColor("#ffa500")
+            )
+            colorCodeMap[paymentResult.code]?.let { it1 -> txtResultMessage.setTextColor(it1) }
         }
     }
 
     // ...
 }
+
+
 ```
 
 ### Verify payment
@@ -182,24 +195,23 @@ The appearance of the payment dialog can be customized to match the look and fee
 
 Colors can be modified by passing a JSON object to the `WalleePaymentSdk` instance. You can either completely override the theme or only change certain colors.
 
-- `walleePayment.setLightTheme(JSONObject)` allows to modify the payment dialog's light theme.
-- `walleePayment.setDarkTheme(JSONObject)` allows to modify the payment dialog's dark theme.
-- `walleePayment.setCustomTheme(JSONObject, ThemeEnum)` allows to enforce a specific theme (dark, light or your own).
+- `WalleePaymentSdk.instance?.setLightTheme(JSONObject)` allows to modify the payment dialog's light theme.
+- `WalleePaymentSdk.instance?.setDarkTheme(JSONObject)` allows to modify the payment dialog's dark theme.
+- `WalleePaymentSdk.instance?.setCustomTheme(JSONObject, ThemeEnum)` allows to enforce a specific theme (dark, light or your own).
 
 ```kotlin
 // ...
 import com.wallee.walleepaymentsdk.enums.ThemeEnum
 
-class MainActivity : AppCompatActivity(), OnResultEventListener {
+class MainActivity : AppCompatActivity() {
     // ...
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        walleePayment = WalleePaymentSdk(this,this)
 
-        walleePayment.setDarkTheme(getCustomTheme())
-        walleePayment.setLightTheme(getCustomTheme())
+        WalleePaymentSdk.instance?.setDarkTheme(getCustomTheme())
+        WalleePaymentSdk.instance?.setLightTheme(getCustomTheme())
     }
 
     fun getCustomTheme(): JSONObject {
@@ -223,15 +235,14 @@ The `setCustomTheme` function allows to define the theme to be used by the payme
 // ...
 import com.wallee.walleepaymentsdk.enums.ThemeEnum
 
-class MainActivity : AppCompatActivity(), OnResultEventListener {
+class MainActivity : AppCompatActivity() {
     // ...
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        walleePayment = WalleePaymentSdk(this,this)
 
-        walleePayment.setCustomTheme(getCustomTheme(), ThemeEnum.DARK)
+        WalleePaymentSdk.instance?.setCustomTheme(getCustomTheme(), ThemeEnum.DARK)
     }
 
     fun getCustomTheme(): JSONObject {
@@ -251,7 +262,7 @@ You can also use `setCustomTheme` to force the usage of the light or dark theme.
 
 ```kotlin
   //...
-walleePayment.setCustomTheme(null, ThemeEnum.DARK)
+WalleePaymentSdk.instance?.setCustomTheme(null, ThemeEnum.DARK)
 ```
 
 ### Colors
