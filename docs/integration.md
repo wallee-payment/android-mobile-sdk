@@ -102,7 +102,7 @@ The response object contains these properties:
   | `COMPLETED` | The payment was successful. |
   | `FAILED` | The payment failed. Check the `message` for more information. |
   | `CANCELED` | The customer canceled the payment. |
-  | `UNCLEAR` | The customer has aborted the payment process, so the payment is in a temporarily unclear state. It will eventually reach a final status (successful or failed), but it may take a while. Wait for a webhook notification and use the Wallee API to retrieve the status of the transaction and inform the customer that the payment is unclear. |
+  | `PENDING` | The customer has aborted the payment process, so the payment is in a temporarily pending state. It will eventually reach a final status (successful or failed), but it may take a while. Wait for a webhook notification and use the Wallee API to retrieve the status of the transaction and inform the customer that the payment is pending. |
   | `TIMEOUT` | Token for this transaction expired. App will be closed and third-party app will get this message. For opening payment sdk third party app have to refetch token |
 
 - `message` providing a localized error message that can be shown to the customer.
@@ -118,10 +118,10 @@ class MainActivity : AppCompatActivity() {
       //...
       txtResultMessage = findViewById(R.id.txtResultMessage)
 
-      initWallee()
+      init()
     }
 
-    private fun initWallee() {
+    private fun init() {
         (application as? MyApp)?.mainState?.observe(this) { paymentResult ->
 
             txtResultMessage.text = paymentResult.code.toString()

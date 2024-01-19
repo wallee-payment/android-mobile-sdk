@@ -15,7 +15,7 @@
 
 ### Requirements
 
-- Android 6.0 (API level 21) and above
+- Android 7.0 (API level 24) and above
 
 ### Configuration
 
