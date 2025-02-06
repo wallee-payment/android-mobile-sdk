@@ -6,6 +6,7 @@
     - [Requirements](#requirements)
     - [Configuration](#configuration)
   - [Documentation](#documentation)
+  - [Troubleshooting](#troubleshooting)
 
 # wallee Android Payment SDK
 
@@ -34,3 +35,4 @@ dependencies {
 - [API Reference](./docs/api-reference.md)
 - [Integration](./docs/integration.md)
 - [Theming](./docs/theming.md)
+- [Troubleshooting](./docs/troubleshooting.md)
