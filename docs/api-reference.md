@@ -6,6 +6,7 @@
 | `OnResultEventListener` | interface | Interface for handling post-payment events `paymentResult` |
 | `fun paymentResult(paymentResult: PaymentResult)` | function | Result handler for transaction state |
 | `WalleePaymentSdk.instance?.launch(token: String)` | function | Opening payment dialog (activity) |
+| `WalleePaymentSdk.instance?.launch(token: String, paymentMethodConfigurationId: Int? = null)` | function | Opening payment dialog (activity), paymentMethodConfigurationId is numeric name of payment method or can be null |
 | `WalleePaymentSdk.instance?.setDarkTheme(theme: JSONObject)` | function | Can override the whole dark theme or just some specific color. All colors are in json format |
 | `WalleePaymentSdk.instance?.setLightTheme(theme: JSONObject)` | function | Can override the whole light theme or just some specific color. All colors are in json format |
 | `WalleePaymentSdk.instance?.setCustomTheme(theme: JSONObject?, baseTheme: ThemeEnum)` | function | Force to use only this theme (independent on user's setup). Can override default light/dark theme and force to use it or completely replace all or specific colors |
