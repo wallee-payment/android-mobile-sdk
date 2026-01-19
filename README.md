@@ -24,7 +24,7 @@ Add `wallee-payment-sdk` to your `app/build.gradle` dependencies.
 ```groovy
 dependencies {
     // ...
-    implementation("com.wallee:wallee-payment-sdk:1.5.1")
+    implementation("com.wallee:wallee-payment-sdk:1.5.2")
     // ...
 }
 ```
