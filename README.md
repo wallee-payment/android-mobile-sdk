@@ -9,7 +9,7 @@
 
 # Android Payment SDK
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.wallee/wallee-payment-sdk)](https://central.sonatype.com/artifact/com.wallee/wallee-payment-sdk/2.0.1)
+[![Maven Central](https://img.shields.io/maven-central/v/com.wallee/wallee-payment-sdk)](https://central.sonatype.com/artifact/com.wallee/wallee-payment-sdk/2.0.2)
 
 ## Installation
 
@@ -24,7 +24,7 @@ Add `wallee-payment-sdk` to your `app/build.gradle` dependencies.
 ```groovy
 dependencies {
     // ...
-    implementation("com.wallee:wallee-payment-sdk:2.0.1")
+    implementation("com.wallee:wallee-payment-sdk:2.0.2")
     // ...
 }
 ```

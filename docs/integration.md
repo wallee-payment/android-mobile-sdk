@@ -140,6 +140,19 @@ class MainActivity : AppCompatActivity() {
 
 ```
 
+### Pending timeout
+
+When the customer aborts an external payment step (for example closing a WebView or a third-party app), the transaction is temporarily in a pending state and the SDK returns the `PENDING` result code immediately.
+
+If you prefer to give the backend a short grace period to reach a final status, call `setPendingTimeout` before launching the payment. While waiting, the SDK shows a loading screen and polls the backend for the transaction status every 2 seconds. As soon as a final status arrives it is returned (`COMPLETED` / `FAILED`); if the timeout elapses first, `PENDING` is returned.
+
+The value is given in seconds and is clamped between `2` and `600` seconds (10 minutes).
+
+```kotlin
+WalleePaymentSdk.instance?.setPendingTimeout(30)
+WalleePaymentSdk.instance?.launch(token, this)
+```
+
 ### Verify payment
 
 As customers could quit the app or lose network connection before the result is handled or malicious clients could manipulate the response, it is strongly recommended to set up your server to listen for webhook events to get transaction state updates. Find more information in the [webhook documentation](https://app-wallee.com/en-us/doc/webhooks).
