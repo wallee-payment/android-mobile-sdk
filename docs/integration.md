@@ -5,6 +5,7 @@
   - [Create transaction](#create-transaction)
   - [Collect payment details](#collect-payment-details)
   - [Handle result](#handle-result)
+  - [Deep link](#deep-link)
   - [Verify payment](#verify-payment)
 
 ## Set up
@@ -152,6 +153,23 @@ The value is given in seconds and is clamped between `2` and `600` seconds (10 m
 WalleePaymentSdk.instance?.setPendingTimeout(30)
 WalleePaymentSdk.instance?.launch(token, this)
 ```
+
+### Deep link
+
+ℹ️ **No action is required.** Deep link handling is set up by default. You don't need to configure, build or handle the deep link in your app.
+
+When the payment is finished, the backend redirects to a deep link with the payment result, for example `com.merchant.app.msdk://mobile-sdk-callback/successCallback`.
+
+- If the payment step runs inside the SDK, the SDK handles the deep link directly.
+- If the payment step runs outside the SDK, for example on a bank page opened in the browser or in a third-party payment app, that browser or app opens the deep link. Android then returns the customer to your app and the SDK receives the payment result.
+
+The deep link URL is built by the backend. Do not build, modify or open it yourself. The SDK does not trust the deep link content. It always fetches the final payment state from the backend, so the deep link only tells the SDK to check the result.
+
+The SDK builds its deep link scheme automatically from your app's `applicationId` by adding the `.msdk` suffix, for example `com.merchant.app.msdk`.
+
+The SDK registers the deep link activity (`DeepLinkRedirectActivity`) in its own `AndroidManifest.xml`, and it is added to your app by the manifest merge. Do not remove it from the merged manifest, for example with `tools:node="remove"`.
+
+If your `applicationId` contains uppercase letters or underscores, it cannot be used as a URI scheme. In that case, the SDK does not use a deep link and the payment flow works as before.
 
 ### Verify payment
 
